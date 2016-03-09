@@ -1,10 +1,16 @@
-var conf = {
-  storageDir: '/var/asset-data/'
-}
-
+var path = require('path');
 var express = require('express');
 var session = require('express-session');
 var bodyParser = require('body-parser');
+var fstools = require('./lib/fstools');
+var dbtools = require('./lib/dbtools');
+
+var conf = {
+  storageDir: '/var/asset-data/',
+  dbFileName: 'metadata.sqlite'
+}
+/* Initialize directory */
+fstools.format_directory(conf.storageDir, conf.dbFileName);
 
 var sessionOpts = {
   secret: process.env.sessionsecret || '5451d0c801584d04b073f1de9be81e8b',
@@ -22,6 +28,9 @@ app.get('/', function(req, res) {
 });
 
 app.use('/assets', require('./routes/assets.js').init(conf))
-app.use('/groups', require('./routes/groups.js'))
+app.use('/groups', require('./routes/groups.js').init(conf))
 
-app.listen(process.env.serverport || 9090);
+/* Initialize database */
+dbtools.create_tables(path.join(conf.storageDir, conf.dbFileName));
+  app.listen(process.env.serverport || 9090);
+
