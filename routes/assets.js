@@ -1,18 +1,21 @@
 var express = require('express');
 var sqlite = require('sqlite3');
+var auth = require('../lib/auth.js');
 var router = express.Router();
 
-var conf = null; // Initialized in init(...)
+/* Initialized in init(...) */
+var conf = null;
+var db = null;
 
 router.get('/', function(req, res) {
   res.send('{"index":"yes"}');
 });
 
-router.put('/', function(req, res) {
-  res.send('{"index":"yes, put"}');
+router.put('/:assetName', auth.verify, function(req, res) {
+  res.send({'_request-for':req.authenticatedUser});
 });
 
-module.exports.init = function(configuration) {
+exports.init = function(configuration) {
   conf = configuration;
   return router;
 }

@@ -9,6 +9,9 @@ var conf = {
   storageDir: '/var/asset-data/',
   dbFileName: 'metadata.sqlite'
 }
+
+var auth = require('./lib/auth').init(conf);
+
 /* Initialize directory */
 fstools.format_directory(conf.storageDir, conf.dbFileName);
 
@@ -31,6 +34,6 @@ app.use('/assets', require('./routes/assets.js').init(conf))
 app.use('/groups', require('./routes/groups.js').init(conf))
 
 /* Initialize database */
-dbtools.create_tables(path.join(conf.storageDir, conf.dbFileName));
+dbtools.create_tables(path.join(conf.storageDir, conf.dbFileName), function() {
   app.listen(process.env.serverport || 9090);
-
+});

@@ -11,7 +11,7 @@ router.put('/', function(req, res) {
   res.send('{"index":"yes, put"}');
 });
 
-module.exports.init = function(configuration) {
+exports.init = function(configuration) {
   conf = configuration;
   return router;
 }
