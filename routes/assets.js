@@ -30,9 +30,11 @@ router.put('/:assetName', auth.verify, function(req, res) {
   var description = req.body.desc || '';
   var newAsset = db.prepare(SQL_NEW_ASSET);
   var record = [req.params.assetName, req.authenticatedUser, description];
+  if (!conf.validName.test(record[0])) {
+    return res.send({error: 'Invalid name'});
+  }
   newAsset.run(record, function(err, data) {
     if (err) {
-      console.error(err.toString());
       res.send({error:err.toString()});
     } else {
       res.send({owner:record[1], name:record[0]});

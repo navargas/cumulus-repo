@@ -6,6 +6,7 @@ var fstools = require('./lib/fstools');
 var dbtools = require('./lib/dbtools');
 
 var conf = {
+  validName: /^[a-zA-Z0-9\-_]{1,120}$/,
   storageDir: '/var/asset-data/',
   dbFileName: 'metadata.sqlite'
 }
