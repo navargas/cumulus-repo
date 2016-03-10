@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS groups (
 CREATE TABLE IF NOT EXISTS assets (
   name TEXT PRIMARY KEY,
   owner TEXT REFERENCES users,
+  description TEXT,
   -- zero = not allowed, non-zero = allowed
   groupWrite BOOLEAN default 1,
   groupRead BOOLEAN default 1,
