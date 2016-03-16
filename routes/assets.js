@@ -1,8 +1,11 @@
 var path = require('path');
+var fs = require('fs');
 var express = require('express');
+var multer = require('multer');
 var sqlite = require('sqlite3');
 var auth = require('../lib/auth.js');
 var router = express.Router();
+
 
 /* Initialized in init(...) */
 var conf = null;
@@ -22,6 +25,31 @@ router.get('/', function(req, res) {
     } else {
       res.send(data);
     }
+  });
+});
+
+router.post('/:assetName/:versionName', auth.verify, function(req, res) {
+  /* Store asset in [asset-data]/assetName/versionName */
+  var assetPath = path.join(conf.storageDir, req.params.assetName);
+  if (!fs.existsSync(assetPath)){
+    fs.mkdirSync(assetPath);
+  }
+  /* Create fs storage callbacks */
+  var storage = multer.diskStorage({
+    destination: function (req, file, callback) {
+      callback(null, assetPath);
+    },
+    filename: function (req, file, callback) {
+      callback(null, req.params.versionName);
+    }
+  });
+  /* multer(...).single(<filename>) returns a middleware router */
+  multer({storage: storage}).single('upload')(req, res, function(err) {
+    if (err) {
+      console.error(err);
+      return res.send({error: 'There was an issue uploading the file'});
+    }
+    return res.send({status: 'ok'});
   });
 });
 
@@ -45,5 +73,13 @@ router.put('/:assetName', auth.verify, function(req, res) {
 exports.init = function(configuration) {
   conf = configuration;
   db = new sqlite.Database(path.join(conf.storageDir, conf.dbFileName));
+  storage = multer.diskStorage({
+    destination: function (req, file, callback) {
+      callback(null, conf.storageDir);
+    },
+    filename: function (req, file, callback) {
+      callback(null, file.fieldname + '-' + Date.now());
+    }
+  });
   return router;
 }
