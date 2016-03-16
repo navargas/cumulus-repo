@@ -14,6 +14,8 @@ var db = null;
 /* SQL Statements */
 var SQL_GET_ASSETS_NO_PERMISSIONS = 'SELECT name, owner, description ' +
                                     'FROM assets LIMIT 50;';
+var SQL_GET_ASSET_BY_NAME = 'SELECT name, owner, description ' +
+                                    'FROM assets WHERE name = (?);';
 var SQL_NEW_ASSET = 'INSERT INTO assets (name, owner, description) ' +
                     'VALUES (?, ?, ?);';
 
@@ -25,6 +27,27 @@ router.get('/', function(req, res) {
     } else {
       res.send(data);
     }
+  });
+});
+
+router.get('/:assetName', auth.verify, function(req, res) {
+  var assetPath = path.join(conf.storageDir, req.params.assetName);
+  /* List individual versions from the directory */
+  fs.readdir(assetPath, function(err, data) {
+    if (err) {
+      return res.send({error: err.toString});
+    }
+    var versions = data;
+    getAsset = db.prepare(SQL_GET_ASSET_BY_NAME);
+    /* Get asset metadata from the database */
+    getAsset.get(req.params.assetName, function(err, data) {
+      var result = {
+        versions: versions,
+        name: req.params.assetName,
+        description: data.description
+      };
+      return res.send(result);
+    });
   });
 });
 
