@@ -28,7 +28,17 @@ router.get('/', function(req, res) {
   });
 });
 
-router.post('/:assetName/:versionName', auth.verify, function(req, res) {
+router.get('/:assetName/:versionName', auth.verify, function(req, res) {
+  var fullpath = path.join(
+    conf.storageDir,
+    req.params.assetName,
+    req.params.versionName
+  );
+  res.download(fullpath, req.params.assetName);
+});
+
+router.post('/:assetName/:versionName',
+            auth.verify, auth.verifyAssetExists, function(req, res) {
   /* Store asset in [asset-data]/assetName/versionName */
   var assetPath = path.join(conf.storageDir, req.params.assetName);
   if (!fs.existsSync(assetPath)){
