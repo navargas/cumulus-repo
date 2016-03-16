@@ -35,7 +35,7 @@ router.get('/:assetName', auth.verify, function(req, res) {
   /* List individual versions from the directory */
   fs.readdir(assetPath, function(err, data) {
     if (err) {
-      return res.send({error: err.toString});
+      return res.send(err.toString());
     }
     var versions = data;
     getAsset = db.prepare(SQL_GET_ASSET_BY_NAME);
@@ -87,6 +87,10 @@ router.post('/:assetName/:versionName',
 });
 
 router.put('/:assetName', auth.verify, function(req, res) {
+  var assetPath = path.join(conf.storageDir, req.params.assetName);
+  if (!fs.existsSync(assetPath)){
+    fs.mkdirSync(assetPath);
+  }
   /* Add new asset named assetName */
   var description = req.body.desc || '';
   var newAsset = db.prepare(SQL_NEW_ASSET);
