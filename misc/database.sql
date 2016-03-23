@@ -24,6 +24,14 @@ CREATE TABLE IF NOT EXISTS assets (
   allRead BOOLEAN default 1
 );
 
+CREATE TABLE IF NOT EXISTS files (
+  asset TEXT REFERENCES assets NOT NULL,
+  version TEXT NOT NULL,
+  -- display name becomes name of downloaded file
+  displayName TEXT,
+  PRIMARY KEY (asset, version)
+ );
+
 -- One assets can have n number of groups
 -- One group can have n number of assets
 CREATE TABLE IF NOT EXISTS groupAssets (

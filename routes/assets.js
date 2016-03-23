@@ -16,8 +16,12 @@ var SQL_GET_ASSETS_NO_PERMISSIONS = 'SELECT name, owner, description ' +
                                     'FROM assets LIMIT 50;';
 var SQL_GET_ASSET_BY_NAME = 'SELECT name, owner, description ' +
                                     'FROM assets WHERE name = (?);';
+var SQL_GET_FILE = 'SELECT displayName ' +
+                   'FROM files WHERE asset = (?) AND version = (?);';
 var SQL_NEW_ASSET = 'INSERT INTO assets (name, owner, description) ' +
                     'VALUES (?, ?, ?);';
+var SQL_NEW_FILE = 'INSERT INTO files (asset, version, displayName) ' +
+                   'VALUES (?, ?, ?);';
 
 router.get('/', function(req, res) {
   db.all(SQL_GET_ASSETS_NO_PERMISSIONS, function (err, data) {
@@ -52,12 +56,16 @@ router.get('/:assetName', auth.verify, function(req, res) {
 });
 
 router.get('/:assetName/:versionName', auth.verify, function(req, res) {
-  var fullpath = path.join(
-    conf.storageDir,
-    req.params.assetName,
-    req.params.versionName
-  );
-  res.download(fullpath, req.params.assetName);
+  var params = [req.params.assetName, req.params.versionName];
+  db.get(SQL_GET_FILE, params, function(err, data) {
+    if (err) return res.send(err);
+    var fullpath = path.join(
+      conf.storageDir,
+      req.params.assetName,
+      req.params.versionName
+    );
+    res.download(fullpath, data.displayName);
+  });
 });
 
 router.post('/:assetName/:versionName',
@@ -73,7 +81,19 @@ router.post('/:assetName/:versionName',
       callback(null, assetPath);
     },
     filename: function (req, file, callback) {
-      callback(null, req.params.versionName);
+      var newFile = db.prepare(SQL_NEW_FILE);
+      var params = [
+        req.params.assetName,   // asset name
+        req.params.versionName, // version
+        file.originalname       // displayName
+      ];
+      newFile.run(params, function(err) {
+        newFile.finalize();
+        if (err)
+          return callback(err);
+        else
+          return callback(null, req.params.versionName);
+      });
     }
   });
   /* multer(...).single(<filename>) returns a middleware router */
