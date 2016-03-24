@@ -19,7 +19,7 @@ var SQL_GET_ASSET_BY_NAME =
   'SELECT name, owner, description ' +
   'FROM assets WHERE name = (?);';
 var SQL_GET_ASSET_DATA =
-  'SELECT name, owner, ' +
+  'SELECT name, owner, description, ' +
   '  ( select group_concat(groupName, \',\') ' +
   '    FROM groupAssets where assetName = $asset ) AS groups ' +
   'FROM assets WHERE name = $asset;';
@@ -132,6 +132,20 @@ router.post('/:assetName/:versionName',
   });
 });
 
+function addAssetToGroup(groupName, assetName, authenticatedUser, callback) {
+  if (!callback) callback = function(err) {};
+  auth.userInGroup(groupName, authenticatedUser, function(userInGroupErr) {
+    if (userInGroupErr) return callback(userInGroupErr);
+    var SQL_ADD_GROUP =
+      'INSERT INTO groupAssets (groupName, assetName) VALUES (?, ?);';
+    var params = [groupName, assetName];
+    db.run(SQL_ADD_GROUP, params, function(err) {
+      if (err) return callback(err.toString());
+      callback();
+    });
+  });
+}
+
 router.put('/:assetName', auth.verify, function(req, res) {
   var assetPath = path.join(conf.storageDir, req.params.assetName);
   if (!fs.existsSync(assetPath)){
@@ -147,6 +161,12 @@ router.put('/:assetName', auth.verify, function(req, res) {
   newAsset.run(record, function(err, data) {
     if (err) {
       res.status(500).send({error:err.toString()});
+    } else if (req.body.group) {
+      addAssetToGroup(req.body.group, req.params.assetName,
+                      req.authenticatedUser, function(err) {
+        if (err) return res.status(500).send({error: err});
+        res.send({owner:record[1], name:record[0]});
+      });
     } else {
       res.send({owner:record[1], name:record[0]});
     }
@@ -154,13 +174,10 @@ router.put('/:assetName', auth.verify, function(req, res) {
 });
 
 //curl -H "$AUTH" -X PUT $URL/assets/<assetName>/groups/<groupName>
-router.put('/:assetName/groups/:groupName',
-           auth.verify, auth.groupVerify, function(req, res) {
-  var SQL_ADD_GROUP =
-    'INSERT INTO groupAssets (groupName, assetName) VALUES (?, ?);';
-  var params = [req.params.groupName, req.params.assetName];
-  db.run(SQL_ADD_GROUP, params, function(err) {
-    if (err) return res.status(500).send({error:err.toString()});
+router.put('/:assetName/groups/:groupName', auth.verify, function(req, res) {
+  addAssetToGroup(req.params.groupName, req.params.assetName,
+                  req.authenticatedUser, function(err) {
+    if (err) return res.status(500).send({error: err});
     res.send({status:'ok'});
   });
 });
