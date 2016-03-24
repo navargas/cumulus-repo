@@ -18,10 +18,10 @@ router.put('/:groupName', auth.verify, function(req, res) {
   var name = req.params.groupName;
   var owner = req.authenticatedUser;
   if (!conf.validName.test(name)) {
-    return res.send({error: 'Invalid name'});
+    return res.status(400).send({error: 'Invalid name'});
   }
   db.run(SQL_ADD_NEW_GROUP, [name, owner], function(err) {
-    if (err) return res.send({error: err.toString()});
+    if (err) return res.status(500).send({error: err.toString()});
     res.send({status:'success', group:name, owner:owner});
   });
 });
