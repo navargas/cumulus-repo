@@ -67,6 +67,18 @@ router.get('/:assetName', auth.verify, function(req, res) {
   });
 });
 
+router.get('/:assetName/groups/', auth.verify, function(req, res) {
+  var SQL_GET_GROUPS_BY_ASSET =
+    'SELECT groupName FROM groupAssets WHERE assetName = ?;';
+  db.all(SQL_GET_GROUPS_BY_ASSET, req.params.assetName, function(err, data) {
+    if (err) return res.status(500).send({error:err.toString()});
+    var result = [];
+    for (var index in data) {
+      if (data[index].groupName) result.push(data[index].groupName);
+    }
+    res.send(result);
+  });
+});
 router.get('/:assetName/:versionName', auth.verify, function(req, res) {
   var params = [req.params.assetName, req.params.versionName];
   db.get(SQL_GET_FILE, params, function(err, data) {
