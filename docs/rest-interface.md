@@ -5,7 +5,8 @@ AUTH="X-API-KEY: <API-KEY>"
 URL=???
 
 # Create new asset:
-curl -H "$AUTH" -X PUT $URL/assets/<assetName> -d 'desc=Optional description here'
+# The "desc" and "group" parameters are optional
+curl -H "$AUTH" -X PUT $URL/assets/<assetName> -d 'desc=Description here&group=groupHere'
 
 # Upload new version:
 curl -H "$AUTH" -X PUT $URL/assets/<assetName>/<assetVersion> --data-binary "@path/to/file"
@@ -18,6 +19,9 @@ curl -H "$AUTH" $URL/assets/<assetName>/<assetVersion>
 
 # Search for an asset:
 curl -H "$AUTH" $URL/assets/?search=keyword
+
+# List all assets from a group:
+curl -H "$AUTH" $URL/assets/?group=<groupName>
 
 # Create new group:
 curl -H "$AUTH" -X PUT $URL/groups/<groupName>

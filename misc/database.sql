@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS assets (
   owner TEXT REFERENCES users,
   description TEXT,
   -- zero = not allowed, non-zero = allowed
-  groupWrite BOOLEAN default 1,
-  groupRead BOOLEAN default 1,
   allWrite BOOLEAN default 0,
   allRead BOOLEAN default 1
 );
@@ -36,7 +34,11 @@ CREATE TABLE IF NOT EXISTS files (
 -- One group can have n number of assets
 CREATE TABLE IF NOT EXISTS groupAssets (
   groupName TEXT REFERENCES groups,
-  assetName TEXT REFERENCES assets
+  assetName TEXT REFERENCES assets,
+  -- zero = not allowed, non-zero = allowed
+  groupWrite BOOLEAN default 0,
+  groupRead BOOLEAN default 1,
+  PRIMARY KEY (groupName, assetName)
 );
 
 -- One user can have n number of groups
