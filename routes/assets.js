@@ -12,22 +12,26 @@ var conf = null;
 var db = null;
 
 /* SQL Statements */
-var SQL_GET_ASSETS_NO_PERMISSIONS = 'SELECT name, owner, description ' +
-                                    'FROM assets LIMIT 50;';
-var SQL_GET_ASSET_BY_NAME = 'SELECT name, owner, description ' +
-                                    'FROM assets WHERE name = (?);';
-var SQL_GET_ASSET_DATA = `-- /*
-  SELECT name, owner,
-    ( select group_concat(groupName, ',')
-      FROM groupAssets where assetName = $asset) AS groups
-  FROM assets WHERE name = $asset
--- */`;
-var SQL_GET_FILE = 'SELECT displayName ' +
-                   'FROM files WHERE asset = (?) AND version = (?);';
-var SQL_NEW_ASSET = 'INSERT INTO assets (name, owner, description) ' +
-                    'VALUES (?, ?, ?);';
-var SQL_NEW_FILE = 'INSERT INTO files (asset, version, displayName) ' +
-                   'VALUES (?, ?, ?);';
+var SQL_GET_ASSETS_NO_PERMISSIONS =
+  'SELECT name, owner, description ' +
+  'FROM assets LIMIT 50;';
+var SQL_GET_ASSET_BY_NAME =
+  'SELECT name, owner, description ' +
+  'FROM assets WHERE name = (?);';
+var SQL_GET_ASSET_DATA =
+  'SELECT name, owner, ' +
+  '  ( select group_concat(groupName, \',\') ' +
+  '    FROM groupAssets where assetName = $asset ) AS groups ' +
+  'FROM assets WHERE name = $asset;';
+var SQL_GET_FILE =
+  'SELECT displayName ' +
+  'FROM files WHERE asset = (?) AND version = (?);';
+var SQL_NEW_ASSET =
+  'INSERT INTO assets (name, owner, description) ' +
+  'VALUES (?, ?, ?);';
+var SQL_NEW_FILE =
+  'INSERT INTO files (asset, version, displayName) ' +
+  'VALUES (?, ?, ?);';
 
 router.get('/', function(req, res) {
   db.all(SQL_GET_ASSETS_NO_PERMISSIONS, function (err, data) {
