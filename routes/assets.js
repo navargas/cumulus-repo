@@ -79,6 +79,7 @@ router.get('/:assetName/groups/', auth.verify, function(req, res) {
     res.send(result);
   });
 });
+
 router.get('/:assetName/:versionName', auth.verify, function(req, res) {
   var params = [req.params.assetName, req.params.versionName];
   db.get(SQL_GET_FILE, params, function(err, data) {
@@ -149,6 +150,18 @@ router.put('/:assetName', auth.verify, function(req, res) {
     } else {
       res.send({owner:record[1], name:record[0]});
     }
+  });
+});
+
+//curl -H "$AUTH" -X PUT $URL/assets/<assetName>/groups/<groupName>
+router.put('/:assetName/groups/:groupName',
+           auth.verify, auth.groupVerify, function(req, res) {
+  var SQL_ADD_GROUP =
+    'INSERT INTO groupAssets (groupName, assetName) VALUES (?, ?);';
+  var params = [req.params.groupName, req.params.assetName];
+  db.run(SQL_ADD_GROUP, params, function(err) {
+    if (err) return res.status(500).send({error:err.toString()});
+    res.send({status:'ok'});
   });
 });
 
