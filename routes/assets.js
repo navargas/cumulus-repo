@@ -16,6 +16,12 @@ var SQL_GET_ASSETS_NO_PERMISSIONS = 'SELECT name, owner, description ' +
                                     'FROM assets LIMIT 50;';
 var SQL_GET_ASSET_BY_NAME = 'SELECT name, owner, description ' +
                                     'FROM assets WHERE name = (?);';
+var SQL_GET_ASSET_DATA = `-- /*
+  SELECT name, owner,
+    ( select group_concat(groupName, ',')
+      FROM groupAssets where assetName = $asset) AS groups
+  FROM assets WHERE name = $asset
+-- */`;
 var SQL_GET_FILE = 'SELECT displayName ' +
                    'FROM files WHERE asset = (?) AND version = (?);';
 var SQL_NEW_ASSET = 'INSERT INTO assets (name, owner, description) ' +
@@ -41,14 +47,17 @@ router.get('/:assetName', auth.verify, function(req, res) {
       return res.send(err.toString());
     }
     var versions = data;
-    getAsset = db.prepare(SQL_GET_ASSET_BY_NAME);
-    /* Get asset metadata from the database */
-    getAsset.get(req.params.assetName, function(err, data) {
+    var params = {$asset:req.params.assetName};
+    db.get(SQL_GET_ASSET_DATA, params, function(err, data) {
       var result = {
         versions: versions,
         name: req.params.assetName,
+        groups: [], // set below
         description: data.description
       };
+      if (data.groups) {
+        result.groups = data.groups.split(',');
+      }
       return res.send(result);
     });
   });
@@ -116,7 +125,7 @@ router.put('/:assetName', auth.verify, function(req, res) {
   var newAsset = db.prepare(SQL_NEW_ASSET);
   var record = [req.params.assetName, req.authenticatedUser, description];
   if (!conf.validName.test(record[0])) {
-    return res.status(500).send({error: 'Invalid name'});
+    return res.status(400).send({error: 'Invalid name'});
   }
   newAsset.run(record, function(err, data) {
     if (err) {
