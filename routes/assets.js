@@ -92,8 +92,7 @@ router.get('/:assetName/:versionName', auth.verify, function(req, res) {
   });
 });
 
-router.post('/:assetName/:versionName',
-            auth.verify, auth.verifyAssetExists, function(req, res) {
+function uploadFileTarget(req, res) {
   /* Store asset in [asset-data]/assetName/versionName */
   var assetPath = path.join(conf.storageDir, req.params.assetName);
   if (!fs.existsSync(assetPath)){
@@ -129,7 +128,21 @@ router.post('/:assetName/:versionName',
     }
     return res.send({status: 'ok'});
   });
-});
+}
+
+router.post(
+  '/:assetName/:versionName',
+  auth.verify,
+  auth.verifyAssetExists,
+  uploadFileTarget
+);
+
+router.put(
+  '/:assetName/:versionName',
+  auth.verify,
+  auth.verifyAssetExists,
+  uploadFileTarget
+);
 
 function addAssetToGroup(groupName, assetName, authenticatedUser, callback) {
   if (!callback) callback = function(err) {};
