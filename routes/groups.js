@@ -10,6 +10,7 @@ var db = null;
 
 var SQL_ADD_NEW_GROUP = 'INSERT INTO groups (name, owner) VALUES (?, ?)';
 var SQL_GET_GROUPS = 'SELECT name, owner FROM groups LIMIT 50';
+var SQL_ADD_USER = "INSERT INTO groupUsers (groupName, userName) VALUES (?, ?)";
 
 router.get('/', function(req, res) {
   /* Return a list of all groups (limit 50) */
@@ -28,7 +29,10 @@ router.put('/:groupName', auth.verify, function(req, res) {
   }
   db.run(SQL_ADD_NEW_GROUP, [name, owner], function(err) {
     if (err) return res.status(500).send({error: err.toString()});
-    res.send({status:'success', group:name, owner:owner});
+    db.run(SQL_ADD_USER, [name, owner], function(memberErr) {
+      if (memberErr) return res.status(500).send({error: memberErr.toString()});
+      res.send({status:'success', group:name, owner:owner});
+    });
   });
 });
 
