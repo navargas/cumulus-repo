@@ -15,6 +15,9 @@ var db = null;
 var SQL_GET_ASSETS_NO_PERMISSIONS =
   'SELECT name, owner, description ' +
   'FROM assets LIMIT 50;';
+var SQL_GET_ASSETS_BY_GROUP =
+  'SELECT name, owner, description ' +
+  'FROM assets WHERE name in (select assetName from groupAssets where groupName = ?)';
 var SQL_GET_ASSET_BY_NAME =
   'SELECT name, owner, description ' +
   'FROM assets WHERE name = (?);';
@@ -34,7 +37,13 @@ var SQL_NEW_FILE =
   'VALUES (?, ?, ?);';
 
 router.get('/', function(req, res) {
-  db.all(SQL_GET_ASSETS_NO_PERMISSIONS, function (err, data) {
+  var query = SQL_GET_ASSETS_NO_PERMISSIONS;
+  var params = [];
+  if (req.query.group) {
+    query = SQL_GET_ASSETS_BY_GROUP;
+    params = [req.query.group];
+  }
+  db.all(query, params, function (err, data) {
     if (err) {
       res.status(500).send({error:err.toString()});
     } else {
