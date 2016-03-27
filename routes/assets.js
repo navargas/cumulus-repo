@@ -3,6 +3,7 @@ var fs = require('fs');
 var express = require('express');
 var multer = require('multer');
 var sqlite = require('sqlite3');
+var rmdir = require('rmdir');
 var auth = require('../lib/auth.js');
 var router = express.Router();
 
@@ -49,6 +50,34 @@ router.get('/', function(req, res) {
     } else {
       res.send(data);
     }
+  });
+});
+
+router.delete('/:assetName', auth.verify, function(req, res) {
+  if (!conf.validName.test(req.params.assetName)) {
+    return res.status(400).send({error: 'Invalid name'});
+  }
+  var SQL_DELETE_ASSETS = 'DELETE FROM assets WHERE name = ?';
+  var SQL_REMOVE_GROUP_ITEMS = 'DELETE FROM groupAssets WHERE assetName = ?';
+  var SQL_REMOVE_FILE_RECORDS = 'DELETE FROM files WHERE asset = ?';
+  var assetPath = path.join(conf.storageDir, req.params.assetName);
+  rmdir(assetPath, function (err, dirs, files) {
+    if (err) return res.status(500).send({error:err.toString()});
+    var statusMessage = 'Asset ' + req.params.assetName + ' deleted with ' +
+                        files.length + ' versions'
+    var asset = req.params.assetName;
+    /* Node js sqlite does not allow muliple statements in a sinlge
+       query. This should be refactored. */
+    db.run(SQL_DELETE_ASSETS, [asset], function(err) {
+      if (err) return res.status(500).send({error:err.toString()});
+      db.run(SQL_REMOVE_GROUP_ITEMS, [asset], function(err) {
+        if (err) return res.status(500).send({error:err.toString()});
+        db.run(SQL_REMOVE_FILE_RECORDS, [asset], function(err) {
+          if (err) return res.status(500).send({error:err.toString()});
+          res.send({message: statusMessage});
+        });
+      });
+    });
   });
 });
 
