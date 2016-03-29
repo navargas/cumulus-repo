@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS groupAssets (
   groupWrite BOOLEAN default 0,
   groupRead BOOLEAN default 1,
   PRIMARY KEY (groupName, assetName),
-  FOREIGN KEY (groupName) REFERENCES groups(name) ON DELETE CASCADE
+  FOREIGN KEY (groupName) REFERENCES groups(name) ON DELETE CASCADE,
+  FOREIGN KEY (assetName) REFERENCES assets(name) ON DELETE CASCADE
 );
 
 -- One user can have n number of groups
@@ -53,5 +54,6 @@ CREATE TABLE IF NOT EXISTS groupUsers (
   userName TEXT REFERENCES users(name),
   -- zero = false, non-zero = true
   isAdmin BOOLEAN default 0,
-  FOREIGN KEY (groupName) REFERENCES groups(name) ON DELETE CASCADE
+  FOREIGN KEY (groupName) REFERENCES groups(name) ON DELETE CASCADE,
+  FOREIGN KEY (userName) REFERENCES users(name) ON DELETE CASCADE
 );
