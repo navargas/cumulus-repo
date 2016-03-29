@@ -58,8 +58,6 @@ router.delete('/:assetName', auth.verify, function(req, res) {
     return res.status(400).send({error: 'Invalid name'});
   }
   var SQL_DELETE_ASSETS = 'DELETE FROM assets WHERE name = ?';
-  var SQL_REMOVE_GROUP_ITEMS = 'DELETE FROM groupAssets WHERE assetName = ?';
-  var SQL_REMOVE_FILE_RECORDS = 'DELETE FROM files WHERE asset = ?';
   var assetPath = path.join(conf.storageDir, req.params.assetName);
   rmdir(assetPath, function (err, dirs, files) {
     if (err) return res.status(500).send({error:err.toString()});

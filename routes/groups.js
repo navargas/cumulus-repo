@@ -24,10 +24,6 @@ router.delete('/:groupName', auth.verify, function(req, res) {
   /* deleting a group will not delete assets */
   var SQL_DELETE_GROUP =
     'DELETE FROM groups WHERE name = ?';
-  var SQL_REMOVE_ASSET_RECORDS =
-    'DELETE FROM groupAssets WHERE groupName = ?';
-  var SQL_REMOVE_GROUP_MEMEBERS =
-    'DELETE FROM groupUsers WHERE groupName = ?';
   db.run(SQL_DELETE_GROUP, [req.params.groupName], function (err) {
     if (err) return res.status(500).send({error:err.toString()});
     res.send({status:'ok'});
