@@ -70,13 +70,7 @@ router.delete('/:assetName', auth.verify, function(req, res) {
        query. This should be refactored. */
     db.run(SQL_DELETE_ASSETS, [asset], function(err) {
       if (err) return res.status(500).send({error:err.toString()});
-      db.run(SQL_REMOVE_GROUP_ITEMS, [asset], function(err) {
-        if (err) return res.status(500).send({error:err.toString()});
-        db.run(SQL_REMOVE_FILE_RECORDS, [asset], function(err) {
-          if (err) return res.status(500).send({error:err.toString()});
-          res.send({message: statusMessage});
-        });
-      });
+      res.send({message: statusMessage});
     });
   });
 });
@@ -226,6 +220,7 @@ router.put('/:assetName/groups/:groupName', auth.verify, function(req, res) {
 exports.init = function(configuration) {
   conf = configuration;
   db = new sqlite.Database(path.join(conf.storageDir, conf.dbFileName));
+  db.run('PRAGMA foreign_keys = ON');
   storage = multer.diskStorage({
     destination: function (req, file, callback) {
       callback(null, conf.storageDir);

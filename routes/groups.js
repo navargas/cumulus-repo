@@ -28,15 +28,9 @@ router.delete('/:groupName', auth.verify, function(req, res) {
     'DELETE FROM groupAssets WHERE groupName = ?';
   var SQL_REMOVE_GROUP_MEMEBERS =
     'DELETE FROM groupUsers WHERE groupName = ?';
-  db.run(SQL_DELETE_GROUP, function (err) {
+  db.run(SQL_DELETE_GROUP, [req.params.groupName], function (err) {
     if (err) return res.status(500).send({error:err.toString()});
-    db.run(SQL_DELETE_GROUP, function (err) {
-      if (err) return res.status(500).send({error:err.toString()});
-      db.run(SQL_DELETE_GROUP, function (err) {
-        if (err) return res.status(500).send({error:err.toString()});
-        res.send({status:'ok'});
-      });
-    });
+    res.send({status:'ok'});
   });
 });
 
@@ -59,5 +53,6 @@ router.put('/:groupName', auth.verify, function(req, res) {
 exports.init = function(configuration) {
   conf = configuration;
   db = new sqlite.Database(path.join(conf.storageDir, conf.dbFileName));
+  db.run('PRAGMA foreign_keys = ON');
   return router;
 }
