@@ -103,7 +103,8 @@ router.get('/:assetName', auth.verify, function(req, res) {
 router.get('/:assetName/:versionName', auth.verify, function(req, res) {
   var params = [req.params.assetName, req.params.versionName];
   db.get(SQL_GET_FILE, params, function(err, data) {
-    if (err) return res.send(err);
+    if (err) return res.status(500).send(err);
+    if (!data) return res.status(404).send({error:'Asset not found'});
     var fullpath = path.join(
       conf.storageDir,
       req.params.assetName,
