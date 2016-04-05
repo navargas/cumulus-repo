@@ -212,7 +212,8 @@ router.put('/:assetName', auth.verify, function(req, res) {
 });
 
 //curl -H "$AUTH" -X PUT $URL/assets/<assetName>/groups/<groupName>
-router.put('/:assetName/groups/:groupName', auth.verify, function(req, res) {
+router.put('/:assetName/groups/:groupName', auth.verify,
+           auth.canWrite, auth.isGroupAdmin, function(req, res) {
   addAssetToGroup(req.params.groupName, req.params.assetName,
                   req.authenticatedUser, function(err) {
     if (err) return res.status(500).send({error: err});
