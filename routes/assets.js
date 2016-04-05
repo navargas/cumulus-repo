@@ -101,7 +101,7 @@ router.get('/:assetName', auth.verify, function(req, res) {
 });
 
 router.get('/:assetName/:versionName', auth.verify,
-           auth.verifyAssetExists, function(req, res) {
+           auth.verifyAssetExists, auth.canRead, function(req, res) {
   var params = [req.params.assetName, req.params.versionName];
   db.get(SQL_GET_FILE, params, function(err, data) {
     if (err) return res.status(500).send(err);
