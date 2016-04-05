@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS groupAssets (
   groupName TEXT REFERENCES groups(name),
   assetName TEXT REFERENCES assets(name),
   -- zero = not allowed, non-zero = allowed
-  groupWrite BOOLEAN default 0,
+  groupWrite BOOLEAN default 1,
   groupRead BOOLEAN default 1,
   PRIMARY KEY (groupName, assetName),
   FOREIGN KEY (groupName) REFERENCES groups(name) ON DELETE CASCADE,
