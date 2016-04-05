@@ -53,7 +53,7 @@ router.get('/', function(req, res) {
   });
 });
 
-router.delete('/:assetName', auth.verify, function(req, res) {
+router.delete('/:assetName', auth.verify, auth.canWrite, function(req, res) {
   if (!conf.validName.test(req.params.assetName)) {
     return res.status(400).send({error: 'Invalid name'});
   }
