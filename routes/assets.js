@@ -156,6 +156,7 @@ router.post(
   '/:assetName/:versionName',
   auth.verify,
   auth.verifyAssetExists,
+  auth.canWrite,
   uploadFileTarget
 );
 
@@ -163,6 +164,7 @@ router.put(
   '/:assetName/:versionName',
   auth.verify,
   auth.verifyAssetExists,
+  auth.canWrite,
   uploadFileTarget
 );
 
