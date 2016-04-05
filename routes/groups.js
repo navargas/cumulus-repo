@@ -51,4 +51,4 @@ exports.init = function(configuration) {
   db = new sqlite.Database(path.join(conf.storageDir, conf.dbFileName));
   db.run('PRAGMA foreign_keys = ON');
   return router;
-}
+};

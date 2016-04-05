@@ -62,7 +62,7 @@ router.delete('/:assetName', auth.verify, auth.canWrite, function(req, res) {
   rmdir(assetPath, function (err, dirs, files) {
     if (err) return res.status(500).send({error:err.toString()});
     var statusMessage = 'Asset ' + req.params.assetName + ' deleted with ' +
-                        files.length + ' versions'
+                        files.length + ' versions';
     var asset = req.params.assetName;
     /* Node js sqlite does not allow muliple statements in a sinlge
        query. This should be refactored. */
@@ -232,4 +232,4 @@ exports.init = function(configuration) {
     }
   });
   return router;
-}
+};

@@ -9,7 +9,7 @@ var conf = {
   validName: /^[a-zA-Z0-9\-_\.]{1,120}$/,
   storageDir: '/var/asset-data/',
   dbFileName: 'metadata.sqlite'
-}
+};
 
 var auth = require('./lib/auth').init(conf);
 
@@ -31,8 +31,8 @@ app.get('/', function(req, res) {
   res.send('{"version": "v1.0.0"}');
 });
 
-app.use('/assets', require('./routes/assets.js').init(conf))
-app.use('/groups', require('./routes/groups.js').init(conf))
+app.use('/assets', require('./routes/assets.js').init(conf));
+app.use('/groups', require('./routes/groups.js').init(conf));
 
 /* Initialize database */
 dbtools.create_tables(path.join(conf.storageDir, conf.dbFileName), function() {
