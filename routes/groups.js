@@ -20,6 +20,24 @@ router.get('/', function(req, res) {
   });
 });
 
+router.get('/:groupName', auth.verify, function(req, res) {
+  var SQL_GET_ASSET_DATA =
+    'SELECT name, owner, ' +
+    '  ( select group_concat(userName, \',\') ' +
+    '    FROM groupUsers where groupName = $group ) AS members ' +
+    'FROM groups WHERE name = $group;';
+  db.get(SQL_GET_ASSET_DATA, {$group:req.params.groupName}, function(err, data) {
+    if (err) return res.status(500).send({error:err.toString()});
+    if (!data)
+      return res.status(404).send({error:'Group not found'});
+    if (data.members)
+      data.members = data.members.split(',');
+    else
+      data.members = [];
+    return res.send(data);
+  });
+});
+
 router.delete('/:groupName', auth.verify, function(req, res) {
   /* deleting a group will not delete assets */
   var SQL_DELETE_GROUP =
