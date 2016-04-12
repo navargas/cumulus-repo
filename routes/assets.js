@@ -5,12 +5,13 @@ var multer = require('multer');
 var sqlite = require('sqlite3');
 var rmdir = require('rmdir');
 var auth = require('../lib/auth.js');
+var dbtools = require('../lib/dbtools.js');
+var db = dbtools.db;
 var router = express.Router();
 
 
 /* Initialized in init(...) */
 var conf = null;
-var db = null;
 
 /* SQL Statements */
 var SQL_GET_ASSETS_NO_PERMISSIONS =
@@ -45,7 +46,7 @@ router.get('/', function(req, res) {
     query = SQL_GET_ASSETS_BY_GROUP;
     params = [req.query.group];
   }
-  db.all(query, params, function (err, data) {
+  db().all(query, params, function (err, data) {
     if (err) {
       res.status(500).send({error:err.toString()});
     } else {
@@ -67,7 +68,7 @@ router.delete('/:assetName', auth.verify, auth.canWrite, function(req, res) {
     var asset = req.params.assetName;
     /* Node js sqlite does not allow muliple statements in a sinlge
        query. This should be refactored. */
-    db.run(SQL_DELETE_ASSETS, [asset], function(err) {
+    db().run(SQL_DELETE_ASSETS, [asset], function(err) {
       if (err) return res.status(500).send({error:err.toString()});
       res.send({message: statusMessage});
     });
@@ -83,7 +84,7 @@ router.get('/:assetName', auth.verify, function(req, res) {
     }
     var versions = data;
     var params = {$asset:req.params.assetName};
-    db.get(SQL_GET_ASSET_DATA, params, function(err, data) {
+    db().get(SQL_GET_ASSET_DATA, params, function(err, data) {
       var result = {
         versions: versions,
         name: req.params.assetName,
@@ -104,7 +105,7 @@ router.get('/:assetName', auth.verify, function(req, res) {
 router.get('/:assetName/:versionName', auth.verify,
            auth.verifyAssetExists, auth.canRead, function(req, res) {
   var params = [req.params.assetName, req.params.versionName];
-  db.get(SQL_GET_FILE, params, function(err, data) {
+  db().get(SQL_GET_FILE, params, function(err, data) {
     if (err) return res.status(500).send(err);
     if (!data) return res.status(404).send({error:'Version not found'});
     var fullpath = path.join(
@@ -128,7 +129,7 @@ function uploadFileTarget(req, res) {
       callback(null, assetPath);
     },
     filename: function (req, file, callback) {
-      var newFile = db.prepare(SQL_NEW_FILE);
+      var newFile = db().prepare(SQL_NEW_FILE);
       var params = [
         req.params.assetName,   // asset name
         req.params.versionName, // version
@@ -177,7 +178,7 @@ function addAssetToGroup(groupName, assetName, authenticatedUser, callback) {
     var SQL_ADD_GROUP =
       'INSERT INTO groupAssets (groupName, assetName) VALUES (?, ?);';
     var params = [groupName, assetName];
-    db.run(SQL_ADD_GROUP, params, function(err) {
+    db().run(SQL_ADD_GROUP, params, function(err) {
       if (err) return callback(err.toString());
       callback();
     });
@@ -191,7 +192,7 @@ router.put('/:assetName', auth.verify, function(req, res) {
   }
   /* Add new asset named assetName */
   var description = req.body.desc || '';
-  var newAsset = db.prepare(SQL_NEW_ASSET);
+  var newAsset = db().prepare(SQL_NEW_ASSET);
   var record = [req.params.assetName, req.authenticatedUser, description];
   if (!conf.validName.test(record[0])) {
     return res.status(400).send({error: 'Invalid name'});
@@ -223,8 +224,6 @@ router.put('/:assetName/groups/:groupName', auth.verify,
 
 exports.init = function(configuration) {
   conf = configuration;
-  db = new sqlite.Database(path.join(conf.storageDir, conf.dbFileName));
-  db.run('PRAGMA foreign_keys = ON');
   storage = multer.diskStorage({
     destination: function (req, file, callback) {
       callback(null, conf.storageDir);
