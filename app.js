@@ -4,6 +4,7 @@ var session = require('express-session');
 var bodyParser = require('body-parser');
 var fstools = require('./lib/fstools');
 var dbtools = require('./lib/dbtools');
+var synchronize = require('./lib/synchronize.js');
 
 var conf = {
   validName: /^[a-zA-Z0-9\-_\.]{1,120}$/,
@@ -31,6 +32,8 @@ if (process.env.CUMULUS_SOURCE) {
   app.use(auth.disableModification);
 };
 
+app.use(synchronize.delayRequestIfBusy);
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', function(req, res) {
@@ -39,6 +42,7 @@ app.get('/', function(req, res) {
 
 app.use('/assets', require('./routes/assets.js').init(conf));
 app.use('/groups', require('./routes/groups.js').init(conf));
+app.use('/synchronize', synchronize.router);
 
 /* Initialize database */
 dbtools.create_tables(path.join(conf.storageDir, conf.dbFileName), function() {
