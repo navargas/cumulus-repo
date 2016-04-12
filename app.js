@@ -25,6 +25,12 @@ var sessionOpts = {
 };
 
 var app = express();
+
+/* If this instance is being synced from elsewhere, only allow GET requests */
+if (process.env.CUMULUS_SOURCE) {
+  app.use(auth.disableModification);
+};
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', function(req, res) {
