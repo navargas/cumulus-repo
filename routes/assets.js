@@ -6,6 +6,7 @@ var sqlite = require('sqlite3');
 var rmdir = require('rmdir');
 var auth = require('../lib/auth.js');
 var dbtools = require('../lib/dbtools.js');
+var synchronize = require('../lib/synchronize.js');
 var db = dbtools.db;
 var router = express.Router();
 
@@ -104,6 +105,7 @@ router.get('/:assetName', auth.verify, function(req, res) {
 
 router.get('/:assetName/:versionName', auth.verify,
            auth.verifyAssetExists, auth.canRead, function(req, res) {
+  var op = new synchronize.ActiveOperation('File Download: ' + req.params.assetName);
   var params = [req.params.assetName, req.params.versionName];
   db().get(SQL_GET_FILE, params, function(err, data) {
     if (err) return res.status(500).send(err);
@@ -113,13 +115,16 @@ router.get('/:assetName/:versionName', auth.verify,
       req.params.assetName,
       req.params.versionName
     );
-    res.download(fullpath, data.displayName);
+    res.download(fullpath, data.displayName, function(err) {
+      op.end();
+    });
   });
 });
 
 function uploadFileTarget(req, res) {
   /* Store asset in [asset-data]/assetName/versionName */
   var assetPath = path.join(conf.storageDir, req.params.assetName);
+  var op = new synchronize.ActiveOperation('File Upload: ' + assetPath, true);
   if (!fs.existsSync(assetPath)){
     fs.mkdirSync(assetPath);
   }
@@ -146,6 +151,7 @@ function uploadFileTarget(req, res) {
   });
   /* multer(...).single(<filename>) returns a middleware router */
   multer({storage: storage}).single('upload')(req, res, function(err) {
+    op.end();
     if (err) {
       return res.status(500).send(
         {error: 'There was an issue uploading the file'}
