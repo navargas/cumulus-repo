@@ -4,12 +4,13 @@ var express = require('express');
 var multer = require('multer');
 var sqlite = require('sqlite3');
 var rmdir = require('rmdir');
+var md5 = require('md5');
+var spawn = require('child_process').spawn;
 var auth = require('../lib/auth.js');
 var dbtools = require('../lib/dbtools.js');
 var synchronize = require('../lib/synchronize.js');
 var db = dbtools.db;
 var router = express.Router();
-
 
 /* Initialized in init(...) */
 var conf = null;
@@ -117,6 +118,33 @@ router.get('/:assetName/:versionName', auth.verify,
     );
     res.download(fullpath, data.displayName, function(err) {
       op.end();
+    });
+  });
+});
+
+router.get('/:assetName/:versionName/md5', auth.verify,
+           auth.verifyAssetExists, auth.canRead, function(req, res) {
+  var op = new synchronize.ActiveOperation('MD5: ' + req.params.assetName);
+  var params = [req.params.assetName, req.params.versionName];
+  db().get(SQL_GET_FILE, params, function(err, data) {
+    if (err) {
+      op.end();
+      return res.status(500).send(err);
+    }
+    if (!data) {
+      op.end();
+      return res.status(404).send({error:'Version not found'});
+    }
+    var fullpath = path.join(
+      conf.storageDir,
+      req.params.assetName,
+      req.params.versionName
+    );
+    fs.readFile(fullpath, function(err, buf) {
+      op.end();
+      if (err) return res.status(500).send({error:err});
+      var hash = md5(buf);
+      return res.send({md5: hash});
     });
   });
 });
