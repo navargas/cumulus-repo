@@ -40,9 +40,21 @@ app.get('/', function(req, res) {
   res.send('{"version": "v1.0.0"}');
 });
 
+app.use(function(req, res, next) {
+  var url = req.originalUrl;
+  var op = new synchronize.ActiveOperation(req.method + ' ' + url);
+  afterRequest = function() {
+    res.removeListener('finish', afterRequest);
+    op.end();
+  };
+  res.on('finish', afterRequest);
+  next();
+});
+
 app.use('/assets', require('./routes/assets.js').init(conf));
 app.use('/groups', require('./routes/groups.js').init(conf));
 app.use('/synchronize', synchronize.router);
+
 
 /* Initialize database */
 dbtools.create_tables(path.join(conf.storageDir, conf.dbFileName), function() {

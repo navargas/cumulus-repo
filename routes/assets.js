@@ -81,9 +81,7 @@ router.get('/:assetName', auth.verify, function(req, res) {
   var assetPath = path.join(conf.storageDir, req.params.assetName);
   /* List individual versions from the directory */
   fs.readdir(assetPath, function(err, data) {
-    if (err) {
-      return res.send(err.toString());
-    }
+    if (err) return res.send(err.toString());
     var versions = data;
     var params = {$asset:req.params.assetName};
     db().get(SQL_GET_ASSET_DATA, params, function(err, data) {
@@ -106,7 +104,6 @@ router.get('/:assetName', auth.verify, function(req, res) {
 
 router.get('/:assetName/:versionName', auth.verify,
            auth.verifyAssetExists, auth.canRead, function(req, res) {
-  var op = new synchronize.ActiveOperation('File Download: ' + req.params.assetName);
   var params = [req.params.assetName, req.params.versionName];
   db().get(SQL_GET_FILE, params, function(err, data) {
     if (err) return res.status(500).send(err);
@@ -117,31 +114,22 @@ router.get('/:assetName/:versionName', auth.verify,
       req.params.versionName
     );
     res.download(fullpath, data.displayName, function(err) {
-      op.end();
     });
   });
 });
 
 router.get('/:assetName/:versionName/md5', auth.verify,
            auth.verifyAssetExists, auth.canRead, function(req, res) {
-  var op = new synchronize.ActiveOperation('MD5: ' + req.params.assetName);
   var params = [req.params.assetName, req.params.versionName];
   db().get(SQL_GET_FILE, params, function(err, data) {
-    if (err) {
-      op.end();
-      return res.status(500).send(err);
-    }
-    if (!data) {
-      op.end();
-      return res.status(404).send({error:'Version not found'});
-    }
+    if (err) return res.status(500).send(err);
+    if (!data) return res.status(404).send({error:'Version not found'});
     var fullpath = path.join(
       conf.storageDir,
       req.params.assetName,
       req.params.versionName
     );
     fs.readFile(fullpath, function(err, buf) {
-      op.end();
       if (err) return res.status(500).send({error:err});
       var hash = md5(buf);
       return res.send({md5: hash});
@@ -152,7 +140,6 @@ router.get('/:assetName/:versionName/md5', auth.verify,
 function uploadFileTarget(req, res) {
   /* Store asset in [asset-data]/assetName/versionName */
   var assetPath = path.join(conf.storageDir, req.params.assetName);
-  var op = new synchronize.ActiveOperation('File Upload: ' + assetPath, true);
   if (!fs.existsSync(assetPath)){
     fs.mkdirSync(assetPath);
   }
@@ -179,7 +166,6 @@ function uploadFileTarget(req, res) {
   });
   /* multer(...).single(<filename>) returns a middleware router */
   multer({storage: storage}).single('upload')(req, res, function(err) {
-    op.end();
     if (err) {
       return res.status(500).send(
         {error: 'There was an issue uploading the file'}
