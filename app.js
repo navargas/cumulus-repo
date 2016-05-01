@@ -1,8 +1,9 @@
-var path = require('path');
 var express = require('express');
+var path = require('path');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 var fstools = require('./lib/fstools');
+var replicate = require('./lib/replicate');
 var dbtools = require('./lib/dbtools');
 var synchronize = require('./lib/synchronize.js');
 
@@ -13,6 +14,15 @@ var conf = {
 };
 
 var auth = require('./lib/auth').init(conf);
+
+if (process.argv.length < 3) {
+  /* conf file should contain an array of server hostnames */
+  console.error('usage: node app.js /path/to/mirrors.json');
+  console.error('       node app.js NO_MIRRORS');
+  process.exit(1);
+} else if (process.argv[1] != 'NO_MIRRORS') {
+  replicate.generateMirrorList(process.argv[2]);
+}
 
 /* Initialize directory */
 fstools.format_directory(conf.storageDir, conf.dbFileName);
@@ -45,6 +55,7 @@ app.use(function(req, res, next) {
   var op = new synchronize.ActiveOperation(req.method + ' ' + url);
   afterRequest = function() {
     res.removeListener('finish', afterRequest);
+    replicate.queueAdd(req, res);
     op.end();
   };
   res.on('finish', afterRequest);

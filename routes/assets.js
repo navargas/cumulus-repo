@@ -171,6 +171,7 @@ function uploadFileTarget(req, res) {
         {error: 'There was an issue uploading the file'}
       );
     }
+    req.localFileSource = assetPath;
     return res.send({status: 'ok'});
   });
 }
