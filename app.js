@@ -20,7 +20,7 @@ if (process.argv.length < 3) {
   console.error('usage: node app.js /path/to/mirrors.json');
   console.error('       node app.js NO_MIRRORS');
   process.exit(1);
-} else if (process.argv[1] != 'NO_MIRRORS') {
+} else if (process.argv[2] != 'NO_MIRRORS') {
   replicate.generateMirrorList(process.argv[2]);
 }
 
