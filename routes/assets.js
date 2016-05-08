@@ -140,11 +140,6 @@ router.get('/:assetName/:versionName/md5', auth.verify,
 function uploadFileTarget(req, res) {
   /* Store asset in [asset-data]/assetName/versionName */
   var assetPath = path.join(conf.storageDir, req.params.assetName);
-  var filePath = path.join(
-    conf.storageDir,
-    req.params.assetName,
-    req.params.versionName
-  );
   if (!fs.existsSync(assetPath)){
     fs.mkdirSync(assetPath);
   }
@@ -172,12 +167,10 @@ function uploadFileTarget(req, res) {
   /* multer(...).single(<filename>) returns a middleware router */
   multer({storage: storage}).single('upload')(req, res, function(err) {
     if (err) {
-      console.error('Upload error', err);
       return res.status(500).send(
         {error: 'There was an issue uploading the file'}
       );
     }
-    req.localFileSource = filePath;
     return res.send({status: 'ok'});
   });
 }
