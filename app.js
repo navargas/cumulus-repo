@@ -14,6 +14,15 @@ var conf = {
 
 var auth = require('./lib/auth').init(conf);
 
+if (process.argv.length < 3) {
+  /* conf file should contain an array of server hostnames */
+  console.error('usage: node app.js /path/to/mirrors.json');
+  console.error('       node app.js NO_MIRRORS');
+  process.exit(1);
+} else if (process.argv[2] != 'NO_MIRRORS') {
+  synchronize.generateMirrorList(process.argv[2]);
+}
+
 /* Initialize directory */
 fstools.format_directory(conf.storageDir, conf.dbFileName);
 
@@ -26,6 +35,12 @@ var sessionOpts = {
 };
 
 var app = express();
+
+/* Avoid crash on uncaughtException */
+process.on('uncaughtException', function (err) {
+  console.error(err);
+  console.log("Exit prevented");
+});
 
 /* If this instance is being synced from elsewhere, only allow GET requests */
 if (process.env.CUMULUS_SOURCE) {
