@@ -121,6 +121,7 @@ router.get('/:assetName/:versionName', auth.verify,
 router.get('/:assetName/:versionName/md5', auth.verify,
            auth.verifyAssetExists, auth.canRead, function(req, res) {
   var params = [req.params.assetName, req.params.versionName];
+  return res.status(500).send({error: 'md5 library error'});
   db().get(SQL_GET_FILE, params, function(err, data) {
     if (err) return res.status(500).send(err);
     if (!data) return res.status(404).send({error:'Version not found'});
