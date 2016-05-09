@@ -149,14 +149,12 @@ function uploadFileTarget(req, res) {
       callback(null, assetPath);
     },
     filename: function (req, file, callback) {
-      var newFile = db().prepare(SQL_NEW_FILE);
       var params = [
         req.params.assetName,   // asset name
         req.params.versionName, // version
         file.originalname       // displayName
       ];
-      newFile.run(params, function(err) {
-        newFile.finalize();
+      db().run(SQL_NEW_FILE, params, function(err) {
         if (err)
           return callback(err);
         else
@@ -212,12 +210,11 @@ router.put('/:assetName', auth.verify, function(req, res) {
   }
   /* Add new asset named assetName */
   var description = req.body.desc || '';
-  var newAsset = db().prepare(SQL_NEW_ASSET);
   var record = [req.params.assetName, req.authenticatedUser, description];
   if (!conf.validName.test(record[0])) {
     return res.status(400).send({error: 'Invalid name'});
   }
-  newAsset.run(record, function(err, data) {
+  db().run(SQL_NEW_ASSET, record, function(err, data) {
     if (err) {
       res.status(500).send({error:err.toString()});
     } else if (req.body.group) {
