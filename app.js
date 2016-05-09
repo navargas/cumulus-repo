@@ -42,10 +42,12 @@ app.get('/', function(req, res) {
 
 app.use(function(req, res, next) {
   var url = req.originalUrl;
-  var op = new synchronize.ActiveOperation(req.method + ' ' + url);
+  var sendChange = (req.method == 'POST' || req.method == 'PUT');
+  var op = new synchronize.ActiveOperation(req.method + ' ' + url, sendChange);
   afterRequest = function() {
     res.removeListener('finish', afterRequest);
-    op.end();
+    var doNotReplicate = (res.statusCode != 200);
+    op.end(doNotReplicate);
   };
   res.on('finish', afterRequest);
   next();
